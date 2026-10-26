@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Shield · Safety System</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ======================================== -->
+  <!-- NAVIGATION -->
+  <!-- ======================================== -->
+  <nav class="navbar">
+    <div class="logo">
+      <!-- Using emoji as fallback, but you can replace with image -->
+      <span style="font-size:2rem;">🛡️</span>
+      <span>Campus Shield</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="active" data-page="dashboard"><i class="fas fa-house"></i> Dashboard</a>
+      <a href="#" data-page="map"><i class="fas fa-map-location-dot"></i> Live Map</a>
+      <a href="#" data-page="alerts"><i class="fas fa-bell"></i> Alerts <span class="nav-badge">3</span></a>
+      <a href="#" data-page="analytics"><i class="fas fa-chart-simple"></i> Analytics</a>
+    </div>
+    <div class="login-badge" id="profileBtn">
+      <span style="font-size:1.3rem;">👤</span>
+      <span>Student</span>
+      <i class="fas fa-chevron-down" style="font-size:0.7rem; opacity:0.6;"></i>
+    </div>
+  </nav>
+
+  <!-- ======================================== -->
+  <!-- PROFILE MODAL (Hidden by default) -->
+  <!-- ======================================== -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal">
+      <button class="modal-close" id="closeModal">&times;</button>
+      <div class="modal-profile">
+        <div class="profile-avatar" style="font-size:4rem;">👤</div>
+        <h2>Alex Johnson</h2>
+        <p class="profile-role">🎓 Student · Computer Science</p>
+        <div class="profile-details">
+          <div><span>📧 Email</span> alex.johnson@campus.edu</div>
+          <div><span>🆔 Student ID</span> CS-2024-078</div>
+          <div><span>📱 Phone</span> +1 (555) 234-5678</div>
+          <div><span>📍 Location</span> Block C, Room 204</div>
+          <div><span>🏫 Department</span> Computer Science</div>
+          <div><span>📅 Joined</span> August 2024</div>
+        </div>
+        <div class="profile-actions">
+          <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          <button class="btn-edit"><i class="fas fa-edit"></i> Edit Profile</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================== -->
+  <!-- LOGIN MODAL (shown when not logged in) -->
+  <!-- ======================================== -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal" style="max-width: 420px;">
+      <div style="text-align:center; margin-bottom: 24px;">
+        <div style="font-size: 3.5rem; margin-bottom: 8px;">🛡️</div>
+        <h2 style="margin-bottom: 4px;">Campus Shield</h2>
+        <p style="color:#6b7f98; font-size: 0.9rem;">Sign in to access your safety dashboard</p>
+      </div>
+
+      <form id="loginForm" style="display:flex; flex-direction:column; gap:14px;">
+        <div class="form-group">
+          <input type="email" id="loginEmail" placeholder="Email address" value="alex.johnson@campus.edu" required />
+        </div>
+        <div class="form-group">
+          <input type="password" id="loginPassword" placeholder="Password" value="password123" required />
+        </div>
+        <p id="loginError" style="color:#dc2626; font-size: 0.85rem; margin: 0; min-height: 20px;"></p>
+        <button type="submit" class="submit-btn" id="loginSubmitBtn" style="margin-top: 4px;">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+      </form>
+
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f4f9;">
+        <p style="font-size: 0.75rem; color:#6b7f98; text-align: center; margin-bottom: 8px;">Demo accounts:</p>
+        <div style="font-size: 0.75rem; color:#4a5f7a; line-height: 1.8;">
+          <div>👤 Student: <strong>alex.johnson@campus.edu</strong> / password123</div>
+          <div>👮 Security: <strong>mike.chen@campus.edu</strong> / password123</div>
+          <div>🔑 Admin: <strong>admin@campus.edu</strong> / admin123</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================== -->
+  <!-- PAGE CONTENT -->
+  <!-- ======================================== -->
+  <div class="page-content">
+
+    <!-- ===== DASHBOARD PAGE (Default) ===== -->
+    <div id="page-dashboard" class="page active">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-content">
+          <h1>Welcome back, <span>Alex</span> 👋</h1>
+          <p>Your campus safety dashboard. Stay aware, stay safe.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-num">0</span>
+            <span class="hero-label">Active Incidents</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-num">4.2</span>
+            <span class="hero-label">Avg Response (min)</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-num">87</span>
+            <span class="hero-label">Total This Month</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MAIN GRID -->
+      <main class="main-grid">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-left">
+
+          <!-- SOS CARD -->
+          <div class="card sos-card">
+            <div class="card-header">
+              <h3><i class="fas fa-triangle-exclamation" style="color:#dc2626;"></i> SOS Emergency</h3>
+              <span class="badge live"><i class="fas fa-circle"></i> Live</span>
+            </div>
+            <p class="card-sub">One-tap alert. Instant help.</p>
+            <div class="sos-wrapper">
+              <button class="sos-btn" id="sosButton">
+                <i class="fas fa-circle-exclamation"></i>
+                <span>PRESS SOS</span>
+              </button>
+              <div class="sos-info">
+                <span><i class="fas fa-location-dot"></i> Location auto-captured</span>
+                <span><i class="fas fa-clock"></i> Timestamp saved</span>
+                <span><i class="fas fa-user-shield"></i> Nearby security notified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- INCIDENT REPORT -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-pen-to-square" style="color:#2563eb;"></i> Report Incident</h3>
+              <span class="badge"><i class="fas fa-image"></i> Photo + Video</span>
+            </div>
+            <p class="card-sub">Submit a report. We'll handle the rest.</p>
+            <form class="report-form" id="reportForm">
+              <div class="form-group">
+                <input type="text" placeholder="Incident title" value="Bullying near Block C" required />
+              </div>
+              <div class="form-group">
+                <select>
+                  <option>Select incident type</option>
+                  <option>Bullying</option>
+                  <option>Theft</option>
+                  <option>Fire</option>
+                  <option selected>Medical Emergency</option>
+                  <option>Ragging</option>
+                  <option>Suspicious Person</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <input type="text" placeholder="Location (building / area)" value="Central Library, 2nd floor" />
+              </div>
+              <div class="form-group">
+                <textarea placeholder="Describe what happened..." rows="3">A student reported verbal harassment. Security en route.</textarea>
+              </div>
+              <div class="form-group upload-group">
+                <label class="upload-btn">
+                  <i class="fas fa-cloud-upload-alt"></i> Upload Photo / Video
+                  <input type="file" multiple accept="image/*,video/*" style="display:none;" />
+                </label>
+                <span class="file-count"><i class="fas fa-check-circle" style="color:#10b981;"></i> 2 files attached</span>
+              </div>
+              <button type="submit" class="submit-btn" id="reportBtn">
+                <i class="fas fa-paper-plane"></i> Submit Report
+              </button>
+            </form>
+          </div>
+
+          <!-- AI PRIORITY -->
+          <div class="card priority-card">
+            <div class="card-header">
+              <h3><i class="fas fa-robot" style="color:#7c3aed;"></i> AI Priority Detection</h3>
+              <span class="badge">Auto-assigned</span>
+            </div>
+            <div class="priority-grid">
+              <div class="priority-item critical"><i class="fas fa-fire"></i> Fire <span>Critical</span></div>
+              <div class="priority-item high"><i class="fas fa-heart-pulse"></i> Medical <span>High</span></div>
+              <div class="priority-item medium"><i class="fas fa-lock"></i> Theft <span>Medium</span></div>
+              <div class="priority-item low"><i class="fas fa-box"></i> Lost Item <span>Low</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-right">
+
+          <!-- LIVE MAP -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-map" style="color:#2563eb;"></i> Live Incident Map</h3>
+              <span class="badge live"><i class="fas fa-circle"></i> 4 active</span>
+            </div>
+            <div class="map-container">
+              <!-- Using a colored div with markers instead of image -->
+              <div class="map-placeholder">
+                <div class="map-grid">
+                  <span>🏛️ Library</span>
+                  <span>🏫 Block A</span>
+                  <span>🏢 Block B</span>
+                  <span>🏋️ Gym</span>
+                  <span>🚗 Parking</span>
+                  <span>🚪 Gate 2</span>
+                </div>
+                <div class="map-markers">
+                  <span class="marker-dot red" style="top:15%; left:20%;">🔥</span>
+                  <span class="marker-dot orange" style="top:35%; left:55%;">🚑</span>
+                  <span class="marker-dot green" style="top:65%; left:30%;">✅</span>
+                  <span class="marker-dot red" style="top:25%; left:75%;">⚠️</span>
+                </div>
+                <p class="map-hint">📍 Click markers for details</p>
+              </div>
+            </div>
+            <div class="map-legend">
+              <span><span class="legend-dot red"></span> Active</span>
+              <span><span class="legend-dot orange"></span> In Progress</span>
+              <span><span class="legend-dot green"></span> Resolved</span>
+            </div>
+          </div>
+
+          <!-- SECURITY DASHBOARD -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-shield" style="color:#2563eb;"></i> Security Dashboard</h3>
+              <span class="badge"><i class="fas fa-user-shield"></i> 6 online</span>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-num">7</span>
+                <span class="stat-label">Active</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num">12</span>
+                <span class="stat-label">In Progress</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num">43</span>
+                <span class="stat-label">Resolved</span>
+              </div>
+            </div>
+            <div class="notification-list">
+              <div class="notif-item">
+                <i class="fas fa-bell" style="color:#dc2626;"></i>
+                <span>Fire alarm triggered at Block C</span>
+                <small>1 min ago</small>
+              </div>
+              <div class="notif-item">
+                <i class="fas fa-rotate-right" style="color:#f59e0b;"></i>
+                <span>Medical emergency update</span>
+                <small>4 min ago</small>
+              </div>
+              <div class="notif-item">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                <span>Theft case closed</span>
+                <small>12 min ago</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- ANALYTICS -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-pie" style="color:#7c3aed;"></i> Analytics Overview</h3>
+              <span class="badge">This month</span>
+            </div>
+            <div class="analytics-grid">
+              <div class="analytics-chart">
+                <div class="chart-bar" style="height:40px;"><span>Theft</span></div>
+                <div class="chart-bar" style="height:60px; background:#dc2626;"><span>Fire</span></div>
+                <div class="chart-bar" style="height:75px; background:#f59e0b;"><span>Medical</span></div>
+                <div class="chart-bar" style="height:30px;"><span>Bullying</span></div>
+                <div class="chart-bar" style="height:20px;"><span>Other</span></div>
+              </div>
+              <div class="analytics-stats">
+                <div><span>Total Incidents</span> <strong>87</strong></div>
+                <div><span>Avg Response</span> <strong>4.2 min</strong></div>
+                <div><span>Unsafe Zones</span> <strong>2</strong></div>
+              </div>
+            </div>
+            <div class="analytics-footer">
+              <span><i class="fas fa-file-alt"></i> Monthly report ready</span>
+              <span><i class="fas fa-arrows-spin"></i> Heatmap active</span>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ===== LIVE MAP PAGE ===== -->
+    <div id="page-map" class="page">
+      <div class="full-page-card">
+        <h2><i class="fas fa-map-location-dot"></i> Live Campus Map</h2>
+        <p>Real-time incident tracking across the campus.</p>
+        <div class="map-full">
+          <div class="map-placeholder large">
+            <div class="map-grid large-grid">
+              <span>🏛️ Library</span>
+              <span>🏫 Block A</span>
+              <span>🏢 Block B</span>
+              <span>🏋️ Gym</span>
+              <span>🚗 Parking</span>
+              <span>🚪 Gate 2</span>
+              <span>🍽️ Cafeteria</span>
+              <span>🏠 Hostel</span>
+            </div>
+            <p>📍 Interactive map with live incident markers</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ALERTS PAGE ===== -->
+    <div id="page-alerts" class="page">
+      <div class="full-page-card">
+        <h2><i class="fas fa-bell"></i> Alerts & Notifications</h2>
+        <p>All your safety notifications in one place.</p>
+        <div class="alert-list">
+          <div class="alert-item high"><span>🔴</span> Fire alarm - Block C <small>1 min ago</small></div>
+          <div class="alert-item medium"><span>🟡</span> Medical emergency - Gym <small>4 min ago</small></div>
+          <div class="alert-item low"><span>🟢</span> Theft resolved - Parking <small>12 min ago</small></div>
+          <div class="alert-item high"><span>🔴</span> Suspicious person - Gate 2 <small>18 min ago</small></div>
+          <div class="alert-item medium"><span>🟡</span> Bullying reported - Library <small>32 min ago</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ANALYTICS PAGE ===== -->
+    <div id="page-analytics" class="page">
+      <div class="full-page-card">
+        <h2><i class="fas fa-chart-simple"></i> Analytics Dashboard</h2>
+        <p>View incident statistics and trends.</p>
+        <div class="analytics-full">
+          <div class="analytics-row">
+            <div class="analytics-box">
+              <h4>Total Incidents</h4>
+              <span class="big-number">87</span>
+              <small>This month</small>
+            </div>
+            <div class="analytics-box">
+              <h4>Average Response</h4>
+              <span class="big-number">4.2</span>
+              <small>minutes</small>
+            </div>
+            <div class="analytics-box">
+              <h4>Unsafe Zones</h4>
+              <span class="big-number">2</span>
+              <small>Heatmap active</small>
+            </div>
+          </div>
+          <div class="chart-full">
+            <div class="chart-bar-large" style="height:50px;"><span>Theft</span> 20</div>
+            <div class="chart-bar-large" style="height:70px; background:#dc2626;"><span>Fire</span> 28</div>
+            <div class="chart-bar-large" style="height:90px; background:#f59e0b;"><span>Medical</span> 35</div>
+            <div class="chart-bar-large" style="height:35px;"><span>Bullying</span> 14</div>
+            <div class="chart-bar-large" style="height:25px;"><span>Other</span> 10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ======================================== -->
+  <!-- FOOTER -->
+  <!-- ======================================== -->
+  <footer class="footer">
+    <p>&copy; 2026 Campus Shield · All rights reserved.</p>
+    <div>
+      <a href="#"><i class="fab fa-github"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-linkedin"></i></a>
+    </div>
+  </footer>
+
+<script src="api.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
