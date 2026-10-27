@@ -28,6 +28,39 @@
   // ============================================
   // AUTH
   // ============================================
+  function switchAuthTab(tab) {
+    const tabSignIn = document.getElementById('tabSignIn');
+    const tabRegister = document.getElementById('tabRegister');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const demoBox = document.getElementById('demoAccountsBox');
+    const subtitle = document.getElementById('authSubtitle');
+    const googleBtnText = document.getElementById('googleBtnText');
+    const loginError = document.getElementById('loginError');
+    const registerError = document.getElementById('registerError');
+
+    if (loginError) loginError.textContent = '';
+    if (registerError) registerError.textContent = '';
+
+    if (tab === 'register') {
+      if (tabSignIn) tabSignIn.classList.remove('active');
+      if (tabRegister) tabRegister.classList.add('active');
+      if (loginForm) loginForm.style.display = 'none';
+      if (registerForm) registerForm.style.display = 'flex';
+      if (demoBox) demoBox.style.display = 'none';
+      if (subtitle) subtitle.textContent = 'Create an account to join your campus safety network';
+      if (googleBtnText) googleBtnText.textContent = 'Sign up with Google';
+    } else {
+      if (tabRegister) tabRegister.classList.remove('active');
+      if (tabSignIn) tabSignIn.classList.add('active');
+      if (loginForm) loginForm.style.display = 'flex';
+      if (registerForm) registerForm.style.display = 'none';
+      if (demoBox) demoBox.style.display = 'block';
+      if (subtitle) subtitle.textContent = 'Sign in to access your safety dashboard';
+      if (googleBtnText) googleBtnText.textContent = 'Continue with Google';
+    }
+  }
+
   async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -58,6 +91,97 @@
 
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const role = document.getElementById('regRole').value;
+    const studentId = document.getElementById('regStudentId').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    const errorEl = document.getElementById('registerError');
+    const btn = document.getElementById('registerSubmitBtn');
+
+    errorEl.textContent = '';
+
+    if (password !== confirmPassword) {
+      errorEl.textContent = 'Passwords do not match.';
+      return;
+    }
+
+    if (password.length < 6) {
+      errorEl.textContent = 'Password must be at least 6 characters.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+    try {
+      const res = await window.API.AuthAPI.register({
+        name,
+        email,
+        password,
+        role,
+        studentId: studentId || null,
+      });
+
+      if (res.success) {
+        window.session.saveSession(res.data.user, res.data.token);
+        hideLoginScreen();
+        await loadUserData();
+        await loadDashboardData();
+        await loadAlerts();
+        showNotification('Welcome to Campus Shield, ' + res.data.user.name + '!', 'Account created successfully', 'success');
+      } else {
+        errorEl.textContent = res.message || 'Registration failed';
+      }
+    } catch (err) {
+      errorEl.textContent = 'Network error. Is the server running?';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+  }
+
+  async function handleGoogleAuth() {
+    const defaultEmail = 'user.' + Math.floor(1000 + Math.random() * 9000) + '@campus.edu';
+    const email = prompt('Enter your Google / Campus email for Google Sign-In:', defaultEmail);
+    if (!email) return;
+
+    const errorEl = document.getElementById('loginError') || document.getElementById('registerError');
+    const googleBtn = document.getElementById('btnGoogleAuth');
+    const originalContent = googleBtn.innerHTML;
+
+    googleBtn.disabled = true;
+    googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting to Google...';
+
+    try {
+      const name = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const res = await window.API.AuthAPI.googleLogin({
+        email,
+        name,
+        googleId: 'google_' + Date.now(),
+      });
+
+      if (res.success) {
+        window.session.saveSession(res.data.user, res.data.token);
+        hideLoginScreen();
+        await loadUserData();
+        await loadDashboardData();
+        await loadAlerts();
+        showNotification('Signed in with Google as ' + res.data.user.email, 'Google Authentication', 'success');
+      } else {
+        if (errorEl) errorEl.textContent = res.message || 'Google authentication failed';
+      }
+    } catch (err) {
+      if (errorEl) errorEl.textContent = 'Network error connecting to Google Auth.';
+    }
+
+    googleBtn.disabled = false;
+    googleBtn.innerHTML = originalContent;
   }
 
   function handleLogout() {
@@ -553,6 +677,36 @@
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
       loginForm.addEventListener('submit', handleLogin);
+    }
+
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+      registerForm.addEventListener('submit', handleRegister);
+    }
+
+    const tabSignIn = document.getElementById('tabSignIn');
+    if (tabSignIn) {
+      tabSignIn.addEventListener('click', () => switchAuthTab('signin'));
+    }
+
+    const tabRegister = document.getElementById('tabRegister');
+    if (tabRegister) {
+      tabRegister.addEventListener('click', () => switchAuthTab('register'));
+    }
+
+    const linkToRegister = document.getElementById('linkToRegister');
+    if (linkToRegister) {
+      linkToRegister.addEventListener('click', () => switchAuthTab('register'));
+    }
+
+    const linkToLogin = document.getElementById('linkToLogin');
+    if (linkToLogin) {
+      linkToLogin.addEventListener('click', () => switchAuthTab('signin'));
+    }
+
+    const btnGoogleAuth = document.getElementById('btnGoogleAuth');
+    if (btnGoogleAuth) {
+      btnGoogleAuth.addEventListener('click', handleGoogleAuth);
     }
 
     initNavigation();

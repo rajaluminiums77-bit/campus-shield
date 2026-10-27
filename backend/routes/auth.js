@@ -49,6 +49,56 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// POST /api/auth/google
+router.post('/google', async (req, res) => {
+  try {
+    const { email, name, googleId } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Google email is required.' });
+    }
+
+    let result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    let user;
+
+    if (result.rows.length === 0) {
+      const randomPassword = await bcrypt.hash(Math.random().toString(36) + Date.now().toString(), 10);
+      const insertResult = await db.query(
+        `INSERT INTO users (name, email, password, role, department, joined_at, last_login)
+         VALUES ($1, $2, $3, 'student', 'Campus Member', NOW(), NOW())
+         RETURNING id, name, email, role, student_id, department, room, joined_at`,
+        [name || email.split('@')[0], email, randomPassword]
+      );
+      user = insertResult.rows[0];
+    } else {
+      user = result.rows[0];
+      await db.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
+    }
+
+    const token = generateToken(user.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Google authentication successful.',
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          student_id: user.student_id,
+          department: user.department,
+          room: user.room,
+        },
+        token,
+      },
+    });
+  } catch (err) {
+    console.error('Google auth error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {

@@ -83,6 +83,12 @@ const AuthAPI = {
       body: JSON.stringify(userData),
     }),
 
+  googleLogin: (googleData) =>
+    apiRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(googleData),
+    }),
+
   me: () => apiRequest('/auth/me'),
 };
 
