@@ -68,18 +68,44 @@ app.get('*', (req, res) => {
   }
 });
 
+const fs = require('fs');
+
+async function autoSetupDatabase() {
+  try {
+    const check = await db.query("SELECT to_regclass('public.users') as exists");
+    if (!check.rows[0].exists) {
+      console.log('🔄 Fresh database detected: auto-creating schema...');
+      const schemaSql = fs.readFileSync(path.join(__dirname, 'db/schema.sql'), 'utf8');
+      await db.query(schemaSql);
+      console.log('✅ Schema created.');
+      const seed = require('./db/seed');
+      if (typeof seed === 'function') {
+        await seed();
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Auto-setup info:', err.message);
+  }
+}
+
 // ============================================
 // START SERVER
 // ============================================
-app.listen(PORT, () => {
-  console.log('');
-  console.log('🛡️  ═══════════════════════════════════════');
-  console.log('🛡️   CAMPUS SHIELD — Backend Running');
-  console.log('🛡️  ═══════════════════════════════════════');
-  console.log(`🚀 Server:     http://localhost:${PORT}`);
-  console.log(`📡 API:        http://localhost:${PORT}/api/health`);
-  console.log(`🌐 Frontend:   http://localhost:${PORT}`);
-  console.log(`🗄️  Database:   ${process.env.DB_NAME || 'campus_shield'}`);
-  console.log('🛡️  ═══════════════════════════════════════');
-  console.log('');
-});
+async function startServer() {
+  await autoSetupDatabase();
+
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('🛡️  ═══════════════════════════════════════');
+    console.log('🛡️   CAMPUS SHIELD — Backend Running');
+    console.log('🛡️  ═══════════════════════════════════════');
+    console.log(`🚀 Server:     http://localhost:${PORT}`);
+    console.log(`📡 API:        http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Frontend:   http://localhost:${PORT}`);
+    console.log(`🗄️  Database:   ${process.env.DB_NAME || 'campus_shield'}`);
+    console.log('🛡️  ═══════════════════════════════════════');
+    console.log('');
+  });
+}
+
+startServer();

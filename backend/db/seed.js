@@ -139,12 +139,20 @@ async function seed() {
     console.log('   Admin:     admin@campus.edu / admin123');
     console.log('');
 
-    process.exit(0);
+    if (require.main === module) {
+      process.exit(0);
+    }
   } catch (err) {
     console.error('❌ Seed failed:', err.message);
     console.error(err);
-    process.exit(1);
+    if (require.main === module) {
+      process.exit(1);
+    }
   }
 }
 
-seed();
+if (require.main === module) {
+  seed();
+}
+
+module.exports = seed;
