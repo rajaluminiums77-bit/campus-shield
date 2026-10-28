@@ -11,6 +11,9 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Google Identity Services (GIS) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Leaflet CSS & JS for Interactive Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -292,29 +295,15 @@
               <span class="badge live"><i class="fas fa-circle"></i> 4 active</span>
             </div>
             <div class="map-container">
-              <!-- Using a colored div with markers instead of image -->
-              <div class="map-placeholder">
-                <div class="map-grid">
-                  <span>🏛️ Library</span>
-                  <span>🏫 Block A</span>
-                  <span>🏢 Block B</span>
-                  <span>🏋️ Gym</span>
-                  <span>🚗 Parking</span>
-                  <span>🚪 Gate 2</span>
-                </div>
-                <div class="map-markers">
-                  <span class="marker-dot red" style="top:15%; left:20%;">🔥</span>
-                  <span class="marker-dot orange" style="top:35%; left:55%;">🚑</span>
-                  <span class="marker-dot green" style="top:65%; left:30%;">✅</span>
-                  <span class="marker-dot red" style="top:25%; left:75%;">⚠️</span>
-                </div>
-                <p class="map-hint">📍 Click markers for details</p>
-              </div>
+              <div id="dashboardMap" style="height: 250px; width: 100%; border-radius: 20px; z-index: 1;"></div>
             </div>
-            <div class="map-legend">
-              <span><span class="legend-dot red"></span> Active</span>
-              <span><span class="legend-dot orange"></span> In Progress</span>
-              <span><span class="legend-dot green"></span> Resolved</span>
+            <div class="map-legend" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+              <div style="display:flex; gap:16px;">
+                <span><span class="legend-dot red"></span> Active</span>
+                <span><span class="legend-dot orange"></span> In Progress</span>
+                <span><span class="legend-dot green"></span> Resolved</span>
+              </div>
+              <small style="color:#6b7f98;"><i class="fas fa-hand-pointer"></i> Click pins for details</small>
             </div>
           </div>
 
@@ -393,20 +382,20 @@
       <div class="full-page-card">
         <h2><i class="fas fa-map-location-dot"></i> Live Campus Map</h2>
         <p>Real-time incident tracking across the campus.</p>
-        <div class="map-full">
-          <div class="map-placeholder large">
-            <div class="map-grid large-grid">
-              <span>🏛️ Library</span>
-              <span>🏫 Block A</span>
-              <span>🏢 Block B</span>
-              <span>🏋️ Gym</span>
-              <span>🚗 Parking</span>
-              <span>🚪 Gate 2</span>
-              <span>🍽️ Cafeteria</span>
-              <span>🏠 Hostel</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div class="map-filters" id="mapFilters" style="display:flex; gap:8px;">
+              <button type="button" class="btn-filter active" data-filter="all">All Incidents</button>
+              <button type="button" class="btn-filter" data-filter="Active">🔴 Active</button>
+              <button type="button" class="btn-filter" data-filter="In Progress">🟡 In Progress</button>
+              <button type="button" class="btn-filter" data-filter="Resolved">🟢 Resolved</button>
             </div>
-            <p>📍 Interactive map with live incident markers</p>
+            <div class="map-legend" style="margin-top:0;">
+              <span><span class="legend-dot red"></span> Active</span>
+              <span><span class="legend-dot orange"></span> In Progress</span>
+              <span><span class="legend-dot green"></span> Resolved</span>
+            </div>
           </div>
+          <div id="fullCampusMap" style="height: 520px; width: 100%; border-radius: 20px; z-index: 1;"></div>
         </div>
       </div>
     </div>

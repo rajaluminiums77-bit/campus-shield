@@ -1131,3 +1131,100 @@ body {
 .auth-footer-text a:hover {
   text-decoration: underline;
 }
+
+/* ======================================== */
+/* LEAFLET MAP CUSTOM STYLING */
+/* ======================================== */
+.leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+  padding: 2px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px !important;
+  line-height: 1.5 !important;
+}
+
+.map-popup-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0b1a2e;
+  margin-bottom: 4px;
+}
+
+.map-popup-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.map-popup-badge.active { background: #fee2e2; color: #dc2626; }
+.map-popup-badge.in-progress { background: #fef3c7; color: #d97706; }
+.map-popup-badge.resolved { background: #d1fae5; color: #059669; }
+
+.map-popup-desc {
+  font-size: 0.82rem;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.map-popup-meta {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  display: flex;
+  justify-content: space-between;
+}
+
+.campus-pin-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  border: 3px solid white;
+  transition: transform 0.2s;
+  animation: mapPulse 2s infinite;
+}
+
+.campus-pin-marker:hover {
+  transform: scale(1.25);
+}
+
+@keyframes mapPulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.btn-filter {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filter:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.btn-filter.active {
+  background: #0b1a2e;
+  color: white;
+  border-color: #0b1a2e;
+}

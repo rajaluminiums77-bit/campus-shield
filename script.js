@@ -6,6 +6,187 @@
 (function () {
   'use strict';
 
+  
+  // ============================================
+  // INTERACTIVE LEAFLET CAMPUS MAPS
+  // ============================================
+  let dashboardMapInstance = null;
+  let fullMapInstance = null;
+  let allMapIncidents = [];
+  let currentMapFilter = 'all';
+
+  const CAMPUS_LOCATIONS = {
+    'Library': { lat: 28.5458, lng: 77.1920, emoji: '🏛️' },
+    'Block A': { lat: 28.5465, lng: 77.1935, emoji: '🏫' },
+    'Block B': { lat: 28.5452, lng: 77.1945, emoji: '🏢' },
+    'Block C': { lat: 28.5442, lng: 77.1930, emoji: '🏢' },
+    'Gym': { lat: 28.5435, lng: 77.1915, emoji: '🏋️' },
+    'Parking': { lat: 28.5470, lng: 77.1910, emoji: '🚗' },
+    'Gate 2': { lat: 28.5430, lng: 77.1940, emoji: '🚪' },
+    'Cafeteria': { lat: 28.5450, lng: 77.1930, emoji: '🍽️' },
+    'Hostel': { lat: 28.5460, lng: 77.1950, emoji: '🏠' },
+  };
+
+  function getIncidentEmoji(type) {
+    const map = {
+      'Fire': '🔥',
+      'Medical Emergency': '🚑',
+      'Medical': '🚑',
+      'Theft': '🔒',
+      'Bullying': '⚠️',
+      'Ragging': '⚠️',
+      'Suspicious Person': '👤',
+      'SOS': '🚨',
+    };
+    return map[type] || '📍';
+  }
+
+  function getStatusColor(status) {
+    if (status === 'Resolved') return '#10b981';
+    if (status === 'In Progress') return '#f59e0b';
+    return '#dc2626';
+  }
+
+  function createMarkerIcon(incident) {
+    const color = getStatusColor(incident.status);
+    const emoji = getIncidentEmoji(incident.type);
+    return L.divIcon({
+      className: 'custom-div-icon',
+      html: `<div class="campus-pin-marker" style="background:${color};">${emoji}</div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -18],
+    });
+  }
+
+  function buildPopupContent(incident) {
+    const badgeClass = incident.status === 'Resolved' ? 'resolved' : (incident.status === 'In Progress' ? 'in-progress' : 'active');
+    return `
+      <div>
+        <div class="map-popup-title">${incident.title || 'Campus Incident'}</div>
+        <span class="map-popup-badge ${badgeClass}">${incident.status || 'Active'}</span>
+        <div class="map-popup-desc">${incident.description || 'No description provided.'}</div>
+        <div class="map-popup-meta">
+          <span>📍 ${incident.location || 'Campus'}</span>
+          <span>${incident.priority || 'Medium'} Priority</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMarkersOnMap(map, incidents) {
+    if (!map) return;
+
+    // Clear existing markers
+    if (map._markerLayerGroup) {
+      map._markerLayerGroup.clearLayers();
+    } else {
+      map._markerLayerGroup = L.layerGroup().addTo(map);
+    }
+
+    // Default markers if none from API yet
+    const displayIncidents = (incidents && incidents.length > 0) ? incidents : [
+      { id: 1, title: 'Fire alarm inspection', type: 'Fire', location: 'Block A', status: 'Active', description: 'Minor smoke detected in lab 3' },
+      { id: 2, title: 'Medical first aid', type: 'Medical Emergency', location: 'Gym', status: 'In Progress', description: 'Student sprained ankle during game' },
+      { id: 3, title: 'Resolved bicycle theft', type: 'Theft', location: 'Parking', status: 'Resolved', description: 'Bicycle returned to owner' },
+      { id: 4, title: 'Suspicious individual', type: 'Suspicious Person', location: 'Gate 2', status: 'Active', description: 'Unregistered visitor near Gate 2' },
+    ];
+
+    displayIncidents.forEach(inc => {
+      if (currentMapFilter !== 'all' && inc.status !== currentMapFilter) return;
+
+      let lat = inc.lat;
+      let lng = inc.lng;
+
+      if (!lat || !lng) {
+        // Find by location name keyword
+        for (const [locName, coords] of Object.entries(CAMPUS_LOCATIONS)) {
+          if (inc.location && inc.location.toLowerCase().includes(locName.toLowerCase())) {
+            lat = coords.lat + (Math.random() - 0.5) * 0.0005;
+            lng = coords.lng + (Math.random() - 0.5) * 0.0005;
+            break;
+          }
+        }
+      }
+
+      // Fallback within campus area
+      if (!lat || !lng) {
+        lat = 28.5450 + (Math.random() - 0.5) * 0.003;
+        lng = 77.1926 + (Math.random() - 0.5) * 0.003;
+      }
+
+      const marker = L.marker([lat, lng], { icon: createMarkerIcon(inc) });
+      marker.bindPopup(buildPopupContent(inc));
+      map._markerLayerGroup.addLayer(marker);
+    });
+  }
+
+  async function initCampusMaps() {
+    if (typeof L === 'undefined') return;
+
+    const campusCenter = [28.5452, 77.1930];
+    const tileLayerUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    const tileOpts = { maxZoom: 19, attribution: '&copy; OpenStreetMap &copy; CARTO' };
+
+    // 1. Dashboard Mini Map
+    const dashEl = document.getElementById('dashboardMap');
+    if (dashEl && !dashboardMapInstance) {
+      dashboardMapInstance = L.map('dashboardMap', {
+        center: campusCenter,
+        zoom: 16,
+        zoomControl: false,
+        attributionControl: false,
+      });
+      L.tileLayer(tileLayerUrl, tileOpts).addTo(dashboardMapInstance);
+      L.control.zoom({ position: 'topright' }).addTo(dashboardMapInstance);
+    }
+
+    // 2. Full Live Map Page
+    const fullEl = document.getElementById('fullCampusMap');
+    if (fullEl && !fullMapInstance) {
+      fullMapInstance = L.map('fullCampusMap', {
+        center: campusCenter,
+        zoom: 16,
+      });
+      L.tileLayer(tileLayerUrl, tileOpts).addTo(fullMapInstance);
+
+      // Add campus zone labels
+      Object.entries(CAMPUS_LOCATIONS).forEach(([name, data]) => {
+        L.circleMarker([data.lat, data.lng], {
+          radius: 8,
+          color: '#2563eb',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.2,
+          weight: 2,
+        }).addTo(fullMapInstance).bindTooltip(`${data.emoji} ${name}`, { permanent: false, direction: 'top' });
+      });
+    }
+
+    // Load incidents from API
+    try {
+      const res = await window.API.IncidentsAPI.list();
+      if (res.success && res.data) {
+        allMapIncidents = res.data;
+      }
+    } catch (e) {
+      console.warn('Could not load incidents for map:', e);
+    }
+
+    renderMarkersOnMap(dashboardMapInstance, allMapIncidents);
+    renderMarkersOnMap(fullMapInstance, allMapIncidents);
+
+    // Setup filter buttons
+    const filterBtns = document.querySelectorAll('#mapFilters .btn-filter');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', function () {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentMapFilter = this.getAttribute('data-filter');
+        renderMarkersOnMap(fullMapInstance, allMapIncidents);
+      });
+    });
+  }
+
   // ============================================
   // LOGIN SCREEN
   // ============================================
@@ -463,6 +644,8 @@
           if (page) page.classList.remove('active');
         });
         pages[pageName].classList.add('active');
+        if (pageName === 'map' && fullMapInstance) { setTimeout(() => fullMapInstance.invalidateSize(), 200); }
+        if (pageName === 'dashboard' && dashboardMapInstance) { setTimeout(() => dashboardMapInstance.invalidateSize(), 200); }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
@@ -789,6 +972,7 @@
     }
 
     initNavigation();
+    initCampusMaps();
     initProfileModal();
     initSOS();
     initReportForm();
