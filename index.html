@@ -11,10 +11,7 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Google Identity Services (GIS) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- Leaflet CSS & JS for Interactive Map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
+  </head>
 <body>
 
   <!-- ======================================== -->
@@ -295,14 +292,77 @@
               <span class="badge live"><i class="fas fa-circle"></i> 4 active</span>
             </div>
             <div class="map-container">
-              <div id="dashboardMap" style="height: 250px; width: 100%; border-radius: 20px; z-index: 1;"></div>
-            </div>
-            <div class="map-legend" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-              <div style="display:flex; gap:16px;">
-                <span><span class="legend-dot red"></span> Active</span>
-                <span><span class="legend-dot orange"></span> In Progress</span>
-                <span><span class="legend-dot green"></span> Resolved</span>
+              <div class="campus-zone-board">
+                <div class="zone-grid" id="dashboardZoneGrid">
+                  <div class="zone-card alert" data-zone="Block A" onclick="selectZone('Block A')">
+                    <div class="zone-top">
+                      <span class="zone-icon">🏫</span>
+                      <span class="zone-status-badge red">Active</span>
+                    </div>
+                    <div class="zone-name">Block A</div>
+                    <div class="zone-incident"><i class="fas fa-fire"></i> Fire Inspection</div>
+                  </div>
+
+                  <div class="zone-card warning" data-zone="Gym" onclick="selectZone('Gym')">
+                    <div class="zone-top">
+                      <span class="zone-icon">🏋️</span>
+                      <span class="zone-status-badge orange">Pending</span>
+                    </div>
+                    <div class="zone-name">Gymnasium</div>
+                    <div class="zone-incident"><i class="fas fa-heart-pulse"></i> Medical Aid</div>
+                  </div>
+
+                  <div class="zone-card alert" data-zone="Gate 2" onclick="selectZone('Gate 2')">
+                    <div class="zone-top">
+                      <span class="zone-icon">🚪</span>
+                      <span class="zone-status-badge red">Active</span>
+                    </div>
+                    <div class="zone-name">Main Gate 2</div>
+                    <div class="zone-incident"><i class="fas fa-user-secret"></i> Suspicious Person</div>
+                  </div>
+
+                  <div class="zone-card resolved" data-zone="Parking" onclick="selectZone('Parking')">
+                    <div class="zone-top">
+                      <span class="zone-icon">🚗</span>
+                      <span class="zone-status-badge green">Resolved</span>
+                    </div>
+                    <div class="zone-name">Parking Area</div>
+                    <div class="zone-incident"><i class="fas fa-check-circle"></i> Bicycle Theft</div>
+                  </div>
+
+                  <div class="zone-card clear" data-zone="Library" onclick="selectZone('Library')">
+                    <div class="zone-top">
+                      <span class="zone-icon">🏛️</span>
+                      <span class="zone-status-badge gray">Safe</span>
+                    </div>
+                    <div class="zone-name">Central Library</div>
+                    <div class="zone-incident safe"><i class="fas fa-shield-halved"></i> All Clear</div>
+                  </div>
+
+                  <div class="zone-card clear" data-zone="Block B" onclick="selectZone('Block B')">
+                    <div class="zone-top">
+                      <span class="zone-icon">🏢</span>
+                      <span class="zone-status-badge gray">Safe</span>
+                    </div>
+                    <div class="zone-name">Block B</div>
+                    <div class="zone-incident safe"><i class="fas fa-shield-halved"></i> All Clear</div>
+                  </div>
+                </div>
+
+                <!-- Live Selected Zone Details -->
+                <div class="zone-detail-panel" id="zoneDetailPanel">
+                  <div class="zone-detail-header">
+                    <span id="detailZoneTitle">📍 Click any zone to view details</span>
+                    <button type="button" class="btn-zone-action" id="btnReportInZone" style="display:none;" onclick="reportInSelectedZone()">
+                      <i class="fas fa-plus"></i> Report Here
+                    </button>
+                  </div>
+                  <div id="detailZoneContent" class="zone-detail-body">
+                    Select any campus zone above to inspect live incident reports, security dispatch status, and safety alerts.
+                  </div>
+                </div>
               </div>
+            </div>
               <small style="color:#6b7f98;"><i class="fas fa-hand-pointer"></i> Click pins for details</small>
             </div>
           </div>
@@ -380,22 +440,62 @@
     <!-- ===== LIVE MAP PAGE ===== -->
     <div id="page-map" class="page">
       <div class="full-page-card">
-        <h2><i class="fas fa-map-location-dot"></i> Live Campus Map</h2>
-        <p>Real-time incident tracking across the campus.</p>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-            <div class="map-filters" id="mapFilters" style="display:flex; gap:8px;">
-              <button type="button" class="btn-filter active" data-filter="all">All Incidents</button>
-              <button type="button" class="btn-filter" data-filter="Active">🔴 Active</button>
-              <button type="button" class="btn-filter" data-filter="In Progress">🟡 In Progress</button>
-              <button type="button" class="btn-filter" data-filter="Resolved">🟢 Resolved</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+          <div>
+            <h2><i class="fas fa-shield-cat" style="color:#2563eb;"></i> Campus Zone Safety Hub</h2>
+            <p style="margin-bottom:0;">Live status, incident reports, and security presence across all campus zones.</p>
+          </div>
+          <div class="map-filters" id="zoneFilterButtons" style="display:flex; gap:8px;">
+            <button type="button" class="btn-filter active" onclick="filterCampusZones('all', this)">All Zones</button>
+            <button type="button" class="btn-filter" onclick="filterCampusZones('alert', this)">🔴 Active Incidents</button>
+            <button type="button" class="btn-filter" onclick="filterCampusZones('warning', this)">🟡 Pending</button>
+            <button type="button" class="btn-filter" onclick="filterCampusZones('clear', this)">🟢 Safe Zones</button>
+          </div>
+        </div>
+
+        <div class="campus-zone-board" style="padding:22px;">
+          <div class="zone-grid" id="fullZoneGrid" style="grid-template-columns: repeat(4, 1fr); gap:16px;">
+            <div class="zone-card alert" data-status="alert" onclick="selectZone('Block A')">
+              <div class="zone-top"><span class="zone-icon">🏫</span><span class="zone-status-badge red">Active</span></div>
+              <div class="zone-name">Block A</div>
+              <div class="zone-incident"><i class="fas fa-fire"></i> Lab Smoke Inspection</div>
             </div>
-            <div class="map-legend" style="margin-top:0;">
-              <span><span class="legend-dot red"></span> Active</span>
-              <span><span class="legend-dot orange"></span> In Progress</span>
-              <span><span class="legend-dot green"></span> Resolved</span>
+            <div class="zone-card warning" data-status="warning" onclick="selectZone('Gym')">
+              <div class="zone-top"><span class="zone-icon">🏋️</span><span class="zone-status-badge orange">Pending</span></div>
+              <div class="zone-name">Gymnasium</div>
+              <div class="zone-incident"><i class="fas fa-heart-pulse"></i> Medical First Aid</div>
+            </div>
+            <div class="zone-card alert" data-status="alert" onclick="selectZone('Gate 2')">
+              <div class="zone-top"><span class="zone-icon">🚪</span><span class="zone-status-badge red">Active</span></div>
+              <div class="zone-name">Main Gate 2</div>
+              <div class="zone-incident"><i class="fas fa-user-secret"></i> Suspicious Individual</div>
+            </div>
+            <div class="zone-card resolved" data-status="clear" onclick="selectZone('Parking')">
+              <div class="zone-top"><span class="zone-icon">🚗</span><span class="zone-status-badge green">Resolved</span></div>
+              <div class="zone-name">Parking Area</div>
+              <div class="zone-incident"><i class="fas fa-check-circle"></i> Bicycle Returned</div>
+            </div>
+            <div class="zone-card clear" data-status="clear" onclick="selectZone('Library')">
+              <div class="zone-top"><span class="zone-icon">🏛️</span><span class="zone-status-badge gray">Safe</span></div>
+              <div class="zone-name">Central Library</div>
+              <div class="zone-incident safe"><i class="fas fa-shield-halved"></i> Guard On Duty</div>
+            </div>
+            <div class="zone-card clear" data-status="clear" onclick="selectZone('Block B')">
+              <div class="zone-top"><span class="zone-icon">🏢</span><span class="zone-status-badge gray">Safe</span></div>
+              <div class="zone-name">Block B</div>
+              <div class="zone-incident safe"><i class="fas fa-shield-halved"></i> No Incidents</div>
+            </div>
+            <div class="zone-card clear" data-status="clear" onclick="selectZone('Cafeteria')">
+              <div class="zone-top"><span class="zone-icon">🍽️</span><span class="zone-status-badge gray">Safe</span></div>
+              <div class="zone-name">Cafeteria</div>
+              <div class="zone-incident safe"><i class="fas fa-shield-halved"></i> All Clear</div>
+            </div>
+            <div class="zone-card clear" data-status="clear" onclick="selectZone('Hostel')">
+              <div class="zone-top"><span class="zone-icon">🏠</span><span class="zone-status-badge gray">Safe</span></div>
+              <div class="zone-name">Hostel Block</div>
+              <div class="zone-incident safe"><i class="fas fa-shield-halved"></i> Patrolling Active</div>
             </div>
           </div>
-          <div id="fullCampusMap" style="height: 520px; width: 100%; border-radius: 20px; z-index: 1;"></div>
         </div>
       </div>
     </div>

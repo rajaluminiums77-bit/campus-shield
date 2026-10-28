@@ -1,3 +1,127 @@
+
+  // ============================================
+  // CAMPUS ZONE SELECTION & INTERACTION
+  // ============================================
+  const ZONE_DETAILS_DATA = {
+    'Block A': {
+      title: '🏫 Block A — Science & Engineering',
+      status: '🔴 Active Alert',
+      desc: 'Minor electrical smoke reported in Lab 304. Security team dispatched, evacuation of 3rd floor completed.',
+      time: 'Reported 15 mins ago · Priority: High',
+    },
+    'Gym': {
+      title: '🏋️ Gymnasium & Sports Complex',
+      status: '🟡 Medical Aid In Progress',
+      desc: 'First-aid assistance requested on Court 2. Campus medical team is on site.',
+      time: 'Reported 35 mins ago · Priority: Medium',
+    },
+    'Gate 2': {
+      title: '🚪 Main Campus Gate 2',
+      status: '🔴 Active Security Alert',
+      desc: 'Unregistered individual without campus ID stopped at entry. Security patrol verifying credentials.',
+      time: 'Reported 20 mins ago · Priority: High',
+    },
+    'Parking': {
+      title: '🚗 North Parking Area',
+      status: '🟢 Incident Resolved',
+      desc: 'Reported misplaced bicycle was recovered by security and returned to student.',
+      time: 'Resolved 1 hour ago',
+    },
+    'Library': {
+      title: '🏛️ Central Library',
+      status: '🟢 Safe & Secure',
+      desc: 'Normal operations. Quiet study zone active. Security guard on duty on ground floor.',
+      time: 'All clear · Regular patrol active',
+    },
+    'Block B': {
+      title: '🏢 Block B — Humanities & Business',
+      status: '🟢 Safe & Secure',
+      desc: 'All classrooms and faculty offices operational. No safety alerts reported.',
+      time: 'All clear',
+    },
+    'Cafeteria': {
+      title: '🍽️ Student Cafeteria & Food Court',
+      status: '🟢 Safe & Secure',
+      desc: 'Routine safety inspection passed. Area is clear and under CCTV surveillance.',
+      time: 'All clear',
+    },
+    'Hostel': {
+      title: '🏠 Student Residential Hostel',
+      status: '🟢 Safe & Secure',
+      desc: 'Night warden and biometric access points functioning normally.',
+      time: 'All clear',
+    },
+  };
+
+  let currentlySelectedZone = null;
+
+  window.selectZone = function(zoneName) {
+    currentlySelectedZone = zoneName;
+
+    // Highlight selected card in both grids
+    document.querySelectorAll('.zone-card').forEach(card => {
+      if (card.getAttribute('data-zone') === zoneName || card.querySelector('.zone-name')?.textContent === zoneName) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+
+    const data = ZONE_DETAILS_DATA[zoneName] || {
+      title: '📍 ' + zoneName,
+      status: '🟢 Monitored',
+      desc: 'Campus zone under active CCTV surveillance and regular security patrols.',
+      time: 'Status: Normal',
+    };
+
+    const titleEl = document.getElementById('detailZoneTitle');
+    const contentEl = document.getElementById('detailZoneContent');
+    const actionBtn = document.getElementById('btnReportInZone');
+
+    if (titleEl) {
+      titleEl.innerHTML = `${data.title} &nbsp; <span style="font-size:0.75rem; font-weight:600;">(${data.status})</span>`;
+    }
+
+    if (contentEl) {
+      contentEl.innerHTML = `
+        <div style="color:#1f2937; margin-bottom:4px;">${data.desc}</div>
+        <div style="font-size:0.75rem; color:#9ca3af;"><i class="fas fa-clock"></i> ${data.time}</div>
+      `;
+    }
+
+    if (actionBtn) {
+      actionBtn.style.display = 'inline-flex';
+    }
+  };
+
+  window.reportInSelectedZone = function() {
+    if (!currentlySelectedZone) return;
+    const locationInput = document.querySelector('#reportForm input[placeholder*="location"], #reportForm input[type="text"]:nth-of-type(2)');
+    if (locationInput) {
+      locationInput.value = currentlySelectedZone;
+    }
+    const reportForm = document.getElementById('reportForm');
+    if (reportForm) {
+      reportForm.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  window.filterCampusZones = function(filterType, btn) {
+    if (btn) {
+      document.querySelectorAll('#zoneFilterButtons .btn-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    document.querySelectorAll('#fullZoneGrid .zone-card').forEach(card => {
+      const status = card.getAttribute('data-status');
+      if (filterType === 'all' || status === filterType) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  };
+
 /**
  * Campus Shield - Frontend Script
  * Wired to backend API with JWT auth
@@ -644,7 +768,7 @@
           if (page) page.classList.remove('active');
         });
         pages[pageName].classList.add('active');
-        if (pageName === 'map' && fullMapInstance) { setTimeout(() => fullMapInstance.invalidateSize(), 200); }
+        
         if (pageName === 'dashboard' && dashboardMapInstance) { setTimeout(() => dashboardMapInstance.invalidateSize(), 200); }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -972,7 +1096,7 @@
     }
 
     initNavigation();
-    initCampusMaps();
+    
     initProfileModal();
     initSOS();
     initReportForm();
