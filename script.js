@@ -146,24 +146,21 @@
     btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
   }
 
-  async function handleGoogleAuth() {
-    const defaultEmail = 'user.' + Math.floor(1000 + Math.random() * 9000) + '@campus.edu';
-    const email = prompt('Enter your Google / Campus email for Google Sign-In:', defaultEmail);
-    if (!email) return;
-
+  async function completeGoogleLogin(name, email, googleId) {
     const errorEl = document.getElementById('loginError') || document.getElementById('registerError');
     const googleBtn = document.getElementById('btnGoogleAuth');
-    const originalContent = googleBtn.innerHTML;
+    const originalContent = googleBtn ? googleBtn.innerHTML : '';
 
-    googleBtn.disabled = true;
-    googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting to Google...';
+    if (googleBtn) {
+      googleBtn.disabled = true;
+      googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating with Google...';
+    }
 
     try {
-      const name = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       const res = await window.API.AuthAPI.googleLogin({
         email,
         name,
-        googleId: 'google_' + Date.now(),
+        googleId: googleId || 'google_' + Date.now(),
       });
 
       if (res.success) {
@@ -180,9 +177,41 @@
       if (errorEl) errorEl.textContent = 'Network error connecting to Google Auth.';
     }
 
-    googleBtn.disabled = false;
-    googleBtn.innerHTML = originalContent;
+    if (googleBtn) {
+      googleBtn.disabled = false;
+      googleBtn.innerHTML = originalContent;
+    }
   }
+
+  function handleGoogleAuth() {
+    const width = 480;
+    const height = 640;
+    const left = Math.max(0, (window.screen.width - width) / 2);
+    const top = Math.max(0, (window.screen.height - height) / 2);
+
+    const popup = window.open(
+      'google-auth.html',
+      'google_auth_window',
+      'width=' + width + ',height=' + height + ',top=' + top + ',left=' + left + ',status=no,menubar=no,toolbar=no'
+    );
+
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      const email = prompt('Enter your Google Account email:');
+      if (email) {
+        const name = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        completeGoogleLogin(name, email);
+      }
+    }
+  }
+
+  window.addEventListener('message', function (event) {
+    if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+      const { name, email, googleId } = event.data;
+      if (email) {
+        completeGoogleLogin(name, email, googleId);
+      }
+    }
+  });
 
   function handleLogout() {
     window.session.clearSession();
