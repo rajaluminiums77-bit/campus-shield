@@ -161,7 +161,7 @@
   }
 
   // Handle real Google credential from Google Identity Services
-  async function handleGoogleCredentialResponse(response) {
+  window.handleGoogleCredentialResponse = async function handleGoogleCredentialResponse(response) {
     if (!response || !response.credential) return;
     const payload = parseJwt(response.credential);
     if (!payload || !payload.email) return;

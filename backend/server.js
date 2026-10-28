@@ -44,7 +44,7 @@ app.use('/api/alerts', alertRoutes);
 app.get('/api/config', (req, res) => {
   res.json({
     success: true,
-    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '55553565000-2hvuvb08gcd0g4ibkta0vg1a5npgivpr.apps.googleusercontent.com',
   });
 });
 
