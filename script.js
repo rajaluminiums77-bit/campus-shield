@@ -146,14 +146,37 @@
     btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
   }
 
-  async function completeGoogleLogin(name, email, googleId) {
+  // Parse JWT token from Google Identity Services
+  function parseJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Handle real Google credential from Google Identity Services
+  async function handleGoogleCredentialResponse(response) {
+    if (!response || !response.credential) return;
+    const payload = parseJwt(response.credential);
+    if (!payload || !payload.email) return;
+
+    await completeGoogleLogin(payload.name || payload.email.split('@')[0], payload.email, payload.sub, payload.picture);
+  }
+
+  async function completeGoogleLogin(name, email, googleId, picture) {
     const errorEl = document.getElementById('loginError') || document.getElementById('registerError');
     const googleBtn = document.getElementById('btnGoogleAuth');
     const originalContent = googleBtn ? googleBtn.innerHTML : '';
 
     if (googleBtn) {
       googleBtn.disabled = true;
-      googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating with Google...';
+      googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in with Google...';
     }
 
     try {
@@ -161,6 +184,7 @@
         email,
         name,
         googleId: googleId || 'google_' + Date.now(),
+        picture: picture || null,
       });
 
       if (res.success) {
@@ -183,35 +207,61 @@
     }
   }
 
-  function handleGoogleAuth() {
-    const width = 480;
-    const height = 640;
-    const left = Math.max(0, (window.screen.width - width) / 2);
-    const top = Math.max(0, (window.screen.height - height) / 2);
+  // Initialize official Google Identity Services
+  async function initGoogleAuth() {
+    try {
+      const res = await fetch('/api/config');
+      const config = await res.json();
+      const clientId = config.googleClientId;
 
-    const popup = window.open(
-      'google-auth.html',
-      'google_auth_window',
-      'width=' + width + ',height=' + height + ',top=' + top + ',left=' + left + ',status=no,menubar=no,toolbar=no'
-    );
+      window.GOOGLE_CLIENT_ID = clientId;
 
-    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-      const email = prompt('Enter your Google Account email:');
-      if (email) {
-        const name = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        completeGoogleLogin(name, email);
+      function renderGoogleButton() {
+        if (clientId && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+          });
+
+          const wrapper = document.getElementById('googleBtnWrapper');
+          if (wrapper) {
+            wrapper.innerHTML = '';
+            google.accounts.id.renderButton(wrapper, {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              text: 'continue_with',
+              shape: 'pill',
+              width: 380,
+              logo_alignment: 'left',
+            });
+          }
+        }
       }
+
+      if (typeof google === 'undefined') {
+        window.addEventListener('load', renderGoogleButton);
+      } else {
+        renderGoogleButton();
+      }
+    } catch (err) {
+      console.warn('Google Identity initialization:', err);
     }
   }
 
-  window.addEventListener('message', function (event) {
-    if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-      const { name, email, googleId } = event.data;
-      if (email) {
-        completeGoogleLogin(name, email, googleId);
+  function handleGoogleAuth() {
+    if (window.GOOGLE_CLIENT_ID && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      google.accounts.id.prompt();
+    } else {
+      const clientId = prompt('Enter your Google OAuth Client ID to activate real Google Login:\n(From console.cloud.google.com -> Credentials):');
+      if (clientId && clientId.trim()) {
+        window.GOOGLE_CLIENT_ID = clientId.trim();
+        initGoogleAuth();
+        alert('Google Client ID connected! Initializing Google Account chooser...');
       }
     }
-  });
+  }
 
   function handleLogout() {
     window.session.clearSession();

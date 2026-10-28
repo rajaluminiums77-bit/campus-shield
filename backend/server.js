@@ -39,6 +39,16 @@ app.use('/api/incidents', incidentRoutes);
 app.use('/api/alerts', alertRoutes);
 
 // ============================================
+// CONFIG
+// ============================================
+app.get('/api/config', (req, res) => {
+  res.json({
+    success: true,
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  });
+});
+
+// ============================================
 // HEALTH CHECK
 // ============================================
 app.get('/api/health', async (req, res) => {
